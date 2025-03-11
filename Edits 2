@@ -1,0 +1,96 @@
+void delete_part(User* loggedInUser) {
+    if (!loggedInUser || !loggedInUser->isAdministrator()) {
+        std::cout << "You do not have the necessary permissions to delete parts." << std::endl;
+        return;
+    }
+
+    while (true) {
+        std::cout << "Enter the part number or description of the part you wish to delete: ";
+        std::string search;
+        std::getline(std::cin, search);
+
+        search = to_lower(search);
+
+        std::vector<int> indices_to_delete;
+
+        for (size_t i = 0; i < inventory.size(); ++i) {
+            if (to_lower(inventory[i].part_number).find(search) != std::string::npos || 
+                to_lower(inventory[i].part_description).find(search) != std::string::npos) {
+                indices_to_delete.push_back(i);
+            }
+        }
+
+        if (!indices_to_delete.empty()) {
+            std::cout << "Matching part(s) found:" << std::endl;
+            for (size_t i = 0; i < indices_to_delete.size(); ++i) {
+                const Part& part = inventory[indices_to_delete[i]];
+                std::cout << (i + 1) << ". Part Number: " << part.part_number
+                    << ", Description: " << part.part_description
+                    << ", Manufacturer: " << part.part_manufacturer
+                    << ", Quantity: " << part.part_quantity << std::endl;
+            }
+
+            std::cout << "Enter the number of the part you wish to delete: ";
+            size_t partIndex;
+            std::cin >> partIndex;
+            std::cin.ignore();
+
+            if (partIndex < 1 || partIndex > indices_to_delete.size()) {
+                std::cout << "Invalid selection." << std::endl;
+                continue;
+            }
+
+            size_t actualIndex = indices_to_delete[partIndex - 1];
+
+            std::cout << "Choose an option:\n";
+            std::cout << "1. Delete a specific quantity\n";
+            std::cout << "2. Delete the entire part\n";
+            std::cout << "3. Return to main menu\n";
+            std::cout << "Enter your choice: ";
+            int choice;
+            std::cin >> choice;
+            std::cin.ignore();
+
+            switch (choice) {
+                case 1: {  // Delete a specific quantity
+                    int quantity;
+                    std::cout << "Enter the quantity to delete: ";
+                    std::cin >> quantity;
+                    std::cin.ignore();
+
+                    if (quantity <= 0 || quantity > inventory[actualIndex].part_quantity) {
+                        std::cout << "Invalid quantity." << std::endl;
+                    } else {
+                        inventory[actualIndex].part_quantity -= quantity;
+                        if (inventory[actualIndex].part_quantity <= 0) {
+                            inventory.erase(inventory.begin() + actualIndex);
+                        }
+                        std::cout << "Quantity deleted." << std::endl;
+                    }
+                    break;
+                }
+                case 2: {  // Delete the entire part
+                    inventory.erase(inventory.begin() + actualIndex);
+                    std::cout << "Part deleted." << std::endl;
+                    break;
+                }
+                case 3: // Return to main menu
+                    return;
+                default:
+                    std::cout << "Invalid option. Please try again." << std::endl;
+                    continue;
+            }
+
+            std::cout << "Do you want to delete more parts? (1 for yes, 0 for no): ";
+            int more_choice;
+            std::cin >> more_choice;
+            std::cin.ignore();
+
+            if (more_choice != 1) {
+                break;
+            }
+        }
+
+        std::cout << "Returning to main menu." << std::endl;
+    }
+}
