@@ -1,0 +1,65 @@
+#include <bcrypt/BCrypt.hpp>
+#include <map>
+#include <string>
+#include <iostream>
+
+class User {
+private:
+    std::string username;
+    std::string password_hash;  // Store hashed password
+    bool is_admin;
+
+public:
+    User(const std::string& username, const std::string& password, bool isAdmin)
+        : username(username), password_hash(BCrypt::generateHash(password)), is_admin(isAdmin) {}
+
+    // Validate the password using bcrypt
+    bool validate(const std::string& try_password) const {
+        return BCrypt::validatePassword(try_password, password_hash);
+    }
+
+    bool isAdministrator() const {
+        return is_admin;
+    }
+
+    std::string getUsername() const {
+        return username;
+    }
+};
+
+class UserManager {
+private:
+    std::map<std::string, User> users;
+
+public:
+    UserManager() {
+        // Default constructor
+    }
+
+    void addUser(const std::string& username, const std::string& password, bool isAdmin) {
+        users.insert(std::make_pair(username, User(username, password, isAdmin)));
+    }
+
+    User* getUser(const std::string& username) {
+        auto it = users.find(username);
+        if (it != users.end()) {
+            return &it->second;
+        }
+        return nullptr;
+    }
+};
+
+int main() {
+    UserManager userManager;
+    // Add users through a secure method, e.g., user input or secure storage
+    std::string adminUsername;
+    std::string adminPassword;
+    std::cout << "Enter admin username: ";
+    std::cin >> adminUsername;
+    std::cout << "Enter admin password: ";
+    std::cin >> adminPassword;
+    userManager.addUser(adminUsername, adminPassword, true);
+
+    // Continue with the rest of the program
+    return 0;
+}
